@@ -1,29 +1,35 @@
-// import { client, connectDB } from './db/db';
 require('dotenv').config();
-const { connectDB } = require('./db/db');
-const { client } = require('./db/db');
-
-
-
+const cors = require('cors');
 const express = require('express');
+const { connectDB } = require('./db/db');
+const jobPostRoute = require('./routes/formSubmit.route');
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json());
+
+// Routes
+app.use('/', jobPostRoute);
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  res.send('API running');
 });
 
 async function startServer() {
-
-  await connectDB();
-
-  app.get('/', (req, res) => res.send('API running'));
-
-  app.listen(3000, () => console.log('Server running on port 3000'));
+  try {
+    await connectDB();
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+  }
 }
 
-startServer().catch(console.error);
+startServer();
