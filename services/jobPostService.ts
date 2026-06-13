@@ -1,10 +1,8 @@
-const { client } = require('../db/db');
+import { client } from '../db/db';
 
-const createJob = async (jobData) => {
+export const createJob = async (jobData: any) => {
     const db = client.db('niyog_db');
     const collection = db.collection('jobs');
     const result = await collection.insertOne(jobData);
     return result;
 }
-
-module.exports = { createJob };

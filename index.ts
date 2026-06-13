@@ -1,12 +1,13 @@
-require('dotenv').config();
-const cors = require('cors');
-const express = require('express');
-const { connectDB } = require('./db/db');
-const jobPostRoute = require('./routes/formSubmit.route');
-const jobsRoute = require('./routes/jobs.route');
+import dotenv from "dotenv";
+dotenv.config();
+import cors from 'cors';
+import express, { Request, Response } from 'express';
+import { connectDB } from './db/db';
+import jobPostRoute from './routes/formSubmit.route';
+import jobsRoute from './routes/jobs.route';
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
@@ -19,7 +20,7 @@ app.use(express.json());
 app.use('/', jobPostRoute);
 app.use('/', jobsRoute);
 
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.send('API running');
 });
 
