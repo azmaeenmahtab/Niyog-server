@@ -5,6 +5,7 @@ import express, { Request, Response } from 'express';
 import { connectDB } from './db/db';
 import jobPostRoute from './routes/formSubmit.route';
 import jobsRoute from './routes/jobs.route';
+import registerCompanyRoute from './routes/company.route';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use(express.json());
 // Routes
 app.use('/', jobPostRoute);
 app.use('/', jobsRoute);
+app.use('/api', registerCompanyRoute);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('API running');
