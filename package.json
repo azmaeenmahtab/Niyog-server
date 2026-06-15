@@ -19,6 +19,7 @@
     "mongodb": "^7.3.0"
   },
   "devDependencies": {
+    "@ljharb/tsconfig": "^0.3.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.3",

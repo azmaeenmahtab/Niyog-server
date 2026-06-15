@@ -8,6 +8,7 @@ export interface RegisterCompanyPayload {
   employeeRange: string;
   description: string;
   logoUrl: string | null;
+  recruiterId: string;
 }
 
 const RegisterCompanyServie = (payload: RegisterCompanyPayload) => {
@@ -21,19 +22,21 @@ const RegisterCompanyServie = (payload: RegisterCompanyPayload) => {
         employeeRange: payload.employeeRange,
         description: payload.description,
         logoUrl: payload.logoUrl,
+        recruiterId: payload.recruiterId,
     };
     const result = companyCollection.insertOne(company);
     return result;
 };
 
-const getAllCompaniesService = async (): Promise<RegisterCompanyPayload[]> => {
+const getCompanyService = async (recruiterId?: string): Promise<RegisterCompanyPayload | null> => {
     const db = client.db("niyog_db");
     const companyCollection = db.collection("companies");
-    const companies = await companyCollection.find({}).toArray();
-    return companies as unknown as RegisterCompanyPayload[];
+    const query = recruiterId ? { recruiterId } : {};
+    const company = await companyCollection.findOne(query);
+    return company as RegisterCompanyPayload | null;
 };
 
 
-module.exports = {RegisterCompanyServie, getAllCompaniesService};
+module.exports = {RegisterCompanyServie, getCompanyService};
 
-export { getAllCompaniesService };
+export { getCompanyService };

@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-const { RegisterCompanyServie, getAllCompaniesService } = require("../services/companyServices");
+import type { Request, Response } from "express";
+const { RegisterCompanyServie, getCompanyService } = require("../services/companyServices");
 
 interface RegisterCompanyPayload {
   name: string;
@@ -9,6 +9,7 @@ interface RegisterCompanyPayload {
   employeeRange: string;
   description: string;
   logoUrl: string | null;
+  recruiterId: string;
 }
 
 export const RegisterCompanyController = async (req: Request, res: Response): Promise<any> => {
@@ -35,17 +36,20 @@ export const RegisterCompanyController = async (req: Request, res: Response): Pr
     }
 };
 
-export const GetAllCompaniesController = async (req: Request, res: Response): Promise<any> => {
+export const GetCompanyController = async (req: Request, res: Response): Promise<any> => {
     try {
-        const companies = await getAllCompaniesService();
+        const recruiterId = typeof req.query.recruiterId === "string"
+            ? req.query.recruiterId
+            : undefined;
+        const company = await getCompanyService(recruiterId);
 
         return res.status(200).json({
             success: true,
             message: "Companies fetched successfully",
-            data: companies,
+            data: company,
         });
     } catch (error: any) {
-        console.error("get all companies error", error);
+        console.error("get company error", error);
         return res.status(500).json({
             success: false,
             message: "Internal server error",
