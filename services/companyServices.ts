@@ -32,7 +32,9 @@ const getCompanyService = async (recruiterId?: string): Promise<RegisterCompanyP
     const db = client.db("niyog_db");
     const companyCollection = db.collection("companies");
     const query = recruiterId ? { recruiterId } : {};
+    console.log("[getCompanyService] query:", JSON.stringify(query));
     const company = await companyCollection.findOne(query);
+    console.log("[getCompanyService] match:", company);
     return company as RegisterCompanyPayload | null;
 };
 

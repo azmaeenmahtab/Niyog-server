@@ -17,6 +17,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Request logger
+app.use((req: Request, _res: Response, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} — query:`, req.query, "— body keys:", req.body ? Object.keys(req.body) : null);
+  next();
+});
+
 // Routes
 app.use('/', jobPostRoute);
 app.use('/', jobsRoute);
