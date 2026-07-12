@@ -5,8 +5,9 @@ import express, { Request, Response } from 'express';
 import { connectDB } from './db/db';
 import jobPostRoute from './routes/formSubmit.route';
 import jobsRoute from './routes/jobs.route';
-import registerCompanyRoute from './routes/company.route';
+import CompanyRoute from './routes/company.route';
 import userRoute from './routes/user.route';
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -27,8 +28,9 @@ app.use((req: Request, _res: Response, next) => {
 // Routes
 app.use('/', jobPostRoute);
 app.use('/', jobsRoute);
-app.use('/api', registerCompanyRoute);
+app.use('/api', CompanyRoute);
 app.use('/api/user', userRoute);
+
 
 app.get('/', (req: Request, res: Response) => {
   res.send('API running');

@@ -10,6 +10,8 @@ const express_1 = __importDefault(require("express"));
 const db_1 = require("./db/db");
 const formSubmit_route_1 = __importDefault(require("./routes/formSubmit.route"));
 const jobs_route_1 = __importDefault(require("./routes/jobs.route"));
+const company_route_1 = __importDefault(require("./routes/company.route"));
+const user_route_1 = __importDefault(require("./routes/user.route"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
 // Middleware
@@ -18,9 +20,16 @@ app.use((0, cors_1.default)({
     credentials: true
 }));
 app.use(express_1.default.json());
+// Request logger
+app.use((req, _res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} — query:`, req.query, "— body keys:", req.body ? Object.keys(req.body) : null);
+    next();
+});
 // Routes
 app.use('/', formSubmit_route_1.default);
 app.use('/', jobs_route_1.default);
+app.use('/api', company_route_1.default);
+app.use('/api/user', user_route_1.default);
 app.get('/', (req, res) => {
     res.send('API running');
 });

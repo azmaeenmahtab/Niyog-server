@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { client } from '../db/db';
 
 export interface RegisterCompanyPayload {
@@ -39,6 +40,41 @@ const getCompanyService = async (recruiterId?: string): Promise<RegisterCompanyP
 };
 
 
-module.exports = {RegisterCompanyServie, getCompanyService};
+const getAllCompaniesService = async () => {
+  const db = client.db("niyog_db");
+  const companyCollection = db.collection("companies");
+  const companies = await companyCollection.find({}).sort({ _id: -1 }).toArray();
+  return companies;
+};
+
+
+const updateCompanyStatusService = async (
+  companyId: string,
+  status: "approved" | "declined"
+) => {
+  const db = client.db("niyog_db");
+  const companyCollection = db.collection("companies");
+
+  const result = await companyCollection.findOneAndUpdate(
+    { _id: new ObjectId(companyId) },
+    { $set: { status, updatedAt: new Date() } },
+    { returnDocument: "after" }
+  );
+
+  return result;
+};
+
+const deleteCompanyService = async (companyId: string) => {
+  const db = client.db("niyog_db");
+  const companyCollection = db.collection("companies");
+
+  const result = await companyCollection.findOneAndDelete({
+    _id: new ObjectId(companyId),
+  });
+
+  return result;
+};
+
+module.exports = {RegisterCompanyServie, getCompanyService, getAllCompaniesService, updateCompanyStatusService, deleteCompanyService};
 
 export { getCompanyService };
