@@ -7,6 +7,7 @@ import jobPostRoute from './routes/formSubmit.route';
 import jobsRoute from './routes/jobs.route';
 import CompanyRoute from './routes/company.route';
 import userRoute from './routes/user.route';
+import applicationRoute from './routes/application.route'
 
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/', jobPostRoute);
 app.use('/', jobsRoute);
 app.use('/api', CompanyRoute);
 app.use('/api/user', userRoute);
+app.use('/api/applications', applicationRoute);
 
 
 app.get('/', (req: Request, res: Response) => {
