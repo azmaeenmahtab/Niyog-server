@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { client } from '../db/db';
 
 const db = client.db('niyog_db');
@@ -176,6 +177,19 @@ export const getJobsByCompanyIdService = async (query: any) => {
         return result;
     } catch (error) {
         console.log("[service] getJobsByCompanyIdService error: ", error);
+        throw error;
+    }
+}
+
+
+export const getJobByIdService = async (jobId: string) => {
+    try {
+        console.log("[service] getJobByIdService called with id:", jobId);
+        const job = await collection.findOne({ _id: new ObjectId(jobId) });
+        console.log("[service] getJobByIdService found:", job ? "yes" : "no");
+        return job;
+    } catch (error) {
+        console.log("[service] getJobByIdService error: ", error);
         throw error;
     }
 }
