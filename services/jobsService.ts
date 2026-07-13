@@ -14,6 +14,11 @@ export interface JobFilters {
     limit?: number;
 }
 
+// Prevents user input from being interpreted as regex syntax
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function parseSalary(salary: string): number | null {
     if (typeof salary !== 'string') {
         console.log("[service] parseSalary: non-string input:", typeof salary, JSON.stringify(salary));
@@ -28,55 +33,135 @@ function parseSalary(salary: string): number | null {
 export const getAllJobsService = async (filters: JobFilters = {}) => {
     try {
         console.log("[service] getAllJobsService called with filters:", filters);
-        const jobs = await collection.find({}).toArray();
-        console.log("[service] fetched", jobs.length, "jobs from db");
 
-        const type = filters.type?.toLowerCase() ?? '';
-        const location = filters.location?.toLowerCase() ?? '';
-        const minSalary = filters.salary ?? 0;
-        const keyword = filters.keyword?.toLowerCase() ?? '';
-        const place = filters.place?.toLowerCase() ?? '';
-        const isRemote = filters.isRemote; // boolean | undefined
+        const page = filters.page && filters.page > 0 ? filters.page : 1;
+        const limit = filters.limit && filters.limit > 0 ? filters.limit : 10;
+        const skip = (page - 1) * limit;
 
-        console.log("[service] normalized — type:", JSON.stringify(type), "location:", JSON.stringify(location), "minSalary:", minSalary, "keyword:", JSON.stringify(keyword), "place:", JSON.stringify(place), "isRemote:", isRemote);
+        const matchConditions: any[] = [];
 
-        let kept = 0;
-        let dropped = 0;
-        const result = jobs.filter((job: any) => {
-            if (type && String(job.type ?? '').toLowerCase() !== type) { dropped++; return false; }
+        if (filters.type) {
+            matchConditions.push({
+                type: { $regex: `^${escapeRegex(filters.type)}$`, $options: 'i' },
+            });
+        }
 
-            // Boolean isRemote filter (DB stores isRemote as a boolean)
-            if (isRemote === true && job.isRemote !== true) { dropped++; return false; }
-            if (isRemote === false && job.isRemote === true) { dropped++; return false; }
+        // Strict isRemote filter (only applied when explicitly passed)
+        if (filters.isRemote === true) {
+            matchConditions.push({ isRemote: true });
+        } else if (filters.isRemote === false) {
+            matchConditions.push({ isRemote: { $ne: true } });
+        }
 
-            // Legacy string-based location filter (kept for backwards compatibility
-            // with any job docs that don't have isRemote set)
-            if (location === 'remote') {
-                if (job.isRemote === true) { /* matches */ }
-                else if (!String(job.location ?? '').toLowerCase().includes('remote')) { dropped++; return false; }
-            } else if (location === 'on-site') {
-                if (job.isRemote === false) { /* matches */ }
-                else if (String(job.location ?? '').toLowerCase().includes('remote')) { dropped++; return false; }
-            }
+        // Legacy "location" string filter — same OR logic as the original in-memory version
+        const location = filters.location?.toLowerCase();
+        if (location === 'remote') {
+            matchConditions.push({
+                $or: [
+                    { isRemote: true },
+                    { location: { $regex: 'remote', $options: 'i' } },
+                ],
+            });
+        } else if (location === 'on-site') {
+            matchConditions.push({
+                $or: [
+                    { isRemote: false },
+                    { location: { $not: { $regex: 'remote', $options: 'i' } } },
+                ],
+            });
+        }
 
-            if (minSalary > 0) {
-                const jobMinSalary = job.salaryMin != null ? Number(job.salaryMin) : parseSalary(job.salary);
-                if (jobMinSalary === null || Number.isNaN(jobMinSalary)) {
-                    // can't determine → don't exclude it
-                } else if (jobMinSalary < minSalary) {
-                    console.log("[service]   ✗ salary drop — job", job._id, "minSalary:", jobMinSalary, "< filter:", minSalary, "title:", job.title);
-                    dropped++; return false;
-                }
-            }
-            if (keyword && !String(job.title ?? '').toLowerCase().includes(keyword)) { dropped++; return false; }
+        if (filters.keyword) {
+            matchConditions.push({
+                title: { $regex: escapeRegex(filters.keyword), $options: 'i' },
+            });
+        }
 
-            if (place && !String(job.location ?? '').toLowerCase().includes(place)) { dropped++; return false; }
+        if (filters.place) {
+            matchConditions.push({
+                location: { $regex: escapeRegex(filters.place), $options: 'i' },
+            });
+        }
 
-            kept++;
-            return true;
+        const pipeline: any[] = [];
+
+        if (matchConditions.length) {
+            pipeline.push({ $match: { $and: matchConditions } });
+        }
+
+        // Salary lives either as a number (salaryMin) or embedded in a string (e.g. "$50k+"),
+        // so we compute an effective numeric value before filtering/sorting on it.
+        if (filters.salary && filters.salary > 0) {
+            pipeline.push({
+                $addFields: {
+                    effectiveMinSalary: {
+                        $cond: [
+                            { $ifNull: ['$salaryMin', false] },
+                            { $toDouble: '$salaryMin' },
+                            {
+                                $let: {
+                                    vars: {
+                                        m: {
+                                            $regexFind: {
+                                                input: { $toString: { $ifNull: ['$salary', ''] } },
+                                                regex: '\\d+',
+                                            },
+                                        },
+                                    },
+                                    in: {
+                                        $cond: [
+                                            { $ne: ['$$m', null] },
+                                            { $toDouble: '$$m.match' },
+                                            null,
+                                        ],
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
+            });
+
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { effectiveMinSalary: null }, // can't determine → don't exclude, same as before
+                        { effectiveMinSalary: { $gte: filters.salary } },
+                    ],
+                },
+            });
+        }
+
+        pipeline.push({
+            $facet: {
+                data: [
+                    { $sort: { postedAt: -1, _id: -1 } }, // _id as tiebreaker/fallback (ObjectId encodes creation time)
+                    { $skip: skip },
+                    { $limit: limit },
+                ],
+                totalCount: [{ $count: 'count' }],
+            },
         });
-        console.log("[service] filter result — kept:", kept, "dropped:", dropped, "returned:", result.length);
-        return result;
+
+        console.log("[service] running aggregation pipeline:", JSON.stringify(pipeline));
+
+        const result = await collection.aggregate(pipeline).toArray();
+
+        const jobs = result[0]?.data ?? [];
+        const totalCount = result[0]?.totalCount?.[0]?.count ?? 0;
+        const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+        console.log("[service] pagination — page:", page, "limit:", limit, "totalCount:", totalCount, "totalPages:", totalPages, "returned:", jobs.length);
+
+        return {
+            jobs,
+            pagination: {
+                totalCount,
+                totalPages,
+                currentPage: page,
+                limit,
+            },
+        };
     } catch (error) {
         console.log("[service] job fetch error: ", error);
         throw error;

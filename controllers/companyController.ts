@@ -45,7 +45,7 @@ export const GetCompanyController = async (req: Request, res: Response): Promise
 
         return res.status(200).json({
             success: true,
-            message: "Companies fetched successfully",
+            message: "Company fetched successfully",
             data: company,
         });
     } catch (error: any) {

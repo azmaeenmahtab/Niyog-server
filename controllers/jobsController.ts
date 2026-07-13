@@ -4,7 +4,6 @@ import { getAllJobsService, getJobsByCompanyIdService } from '../services/jobsSe
 export const getAllJobsController = async (req: Request, res: Response): Promise<any> => {
     try {
         console.log("[controller] GET /get-all-jobs — raw req.query:", req.query);
-        // extract all the query data from the queryparams
         const filters: {
             type?: string;
             location?: string;
@@ -12,6 +11,8 @@ export const getAllJobsController = async (req: Request, res: Response): Promise
             keyword?: string;
             place?: string;
             isRemote?: boolean;
+            page?: number;
+            limit?: number;
         } = {};
 
         if (typeof req.query.type === 'string' && req.query.type.length) {
@@ -35,13 +36,23 @@ export const getAllJobsController = async (req: Request, res: Response): Promise
             filters.place = req.query.place;
         }
 
+        // Pagination params
+        const parsedPage = parseInt(req.query.page as string, 10);
+        filters.page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        const requestedLimit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 10;
+        filters.limit = Math.min(requestedLimit, 50); // cap to prevent abuse
+
         console.log("[controller] assembled filters:", filters);
         const result = await getAllJobsService(filters);
-        console.log("[controller] service returned", Array.isArray(result) ? result.length : "n/a", "jobs");
+        console.log("[controller] service returned", result.jobs.length, "jobs, pagination:", result.pagination);
+
         return res.status(200).json({
             success: true,
             message: "Jobs fetched successfully",
-            data: result
+            data: result.jobs,
+            pagination: result.pagination,
         });
     } catch (error: any) {
         console.log("[controller] error:", error);
