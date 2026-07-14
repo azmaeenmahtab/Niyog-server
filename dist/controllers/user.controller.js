@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserRole = void 0;
+exports.getUserProfileController = exports.updateUserRole = void 0;
 const user_service_1 = require("../services/user.service"); // Adjust the path to your service file
 const updateUserRole = async (req, res, next) => {
     try {
@@ -46,3 +46,37 @@ const updateUserRole = async (req, res, next) => {
     }
 };
 exports.updateUserRole = updateUserRole;
+const getUserProfileController = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId || typeof userId !== 'string') {
+            res.status(400).json({
+                success: false,
+                message: 'Valid user ID parameter is required.',
+            });
+            return;
+        }
+        const user = await (0, user_service_1.getUserProfileService)(userId);
+        if (!user) {
+            res.status(404).json({
+                success: false,
+                message: 'User profile not found.',
+            });
+            return;
+        }
+        // Sanitize user output if needed (e.g. omitting sensitive fields)
+        res.status(200).json({
+            success: true,
+            message: 'User profile retrieved successfully.',
+            data: user,
+        });
+    }
+    catch (error) {
+        console.error('getUserProfileController error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Internal server error.',
+        });
+    }
+};
+exports.getUserProfileController = getUserProfileController;

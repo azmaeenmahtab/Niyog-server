@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const dashboard_controller_1 = require("../controllers/dashboard.controller");
+const verifyJWTToken_1 = require("../middlewares/verifyJWTToken");
+const router = (0, express_1.Router)();
+router.get('/recruiter/:recruiterId', verifyJWTToken_1.validateToken, dashboard_controller_1.getRecruiterStatsController);
+router.get('/admin', verifyJWTToken_1.validateToken, /* requireAdmin, */ dashboard_controller_1.getAdminStatsController);
+router.get('/applicant/:userId', verifyJWTToken_1.validateToken, dashboard_controller_1.getApplicantStatsController);
+exports.default = router;

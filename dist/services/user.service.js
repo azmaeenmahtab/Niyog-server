@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userService = void 0;
+exports.getUserProfileService = exports.userService = void 0;
 const mongodb_1 = require("mongodb"); // Import ObjectId from the native driver
 const db_1 = require("../db/db");
 const db = db_1.client.db('niyog_db');
@@ -18,3 +18,30 @@ exports.userService = {
         return result;
     }
 };
+const getUserProfileService = async (userId) => {
+    try {
+        console.log("[service] getUserProfileService called — userId:", userId);
+        const usersCollection = db.collection('user');
+        // Convert string ID to MongoDB ObjectId safely
+        let queryId;
+        try {
+            queryId = new mongodb_1.ObjectId(userId);
+        }
+        catch (err) {
+            console.log("[service] Invalid ObjectId format:", userId);
+            return null;
+        }
+        const user = await usersCollection.findOne({ _id: queryId });
+        if (!user) {
+            console.log("[service] User not found for ID:", userId);
+            return null;
+        }
+        console.log("[service] getUserProfileService found user:", user.email);
+        return user;
+    }
+    catch (error) {
+        console.error("[service] getUserProfileService error:", error);
+        throw error;
+    }
+};
+exports.getUserProfileService = getUserProfileService;

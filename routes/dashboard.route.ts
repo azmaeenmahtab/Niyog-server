@@ -5,8 +5,8 @@ import { validateToken } from '../middlewares/verifyJWTToken';
 
 const router = Router();
 
-router.get('/recruiter/:recruiterId', getRecruiterStatsController);
-router.get('/admin', /* requireAdmin, */ getAdminStatsController);
+router.get('/recruiter/:recruiterId', validateToken, getRecruiterStatsController);
+router.get('/admin', validateToken, /* requireAdmin, */ getAdminStatsController);
 router.get('/applicant/:userId', validateToken, getApplicantStatsController);
 
 export default router;

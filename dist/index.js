@@ -14,6 +14,7 @@ const company_route_1 = __importDefault(require("./routes/company.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
 const application_route_1 = __importDefault(require("./routes/application.route"));
 const report_route_1 = __importDefault(require("./routes/report.route"));
+const dashboard_route_1 = __importDefault(require("./routes/dashboard.route"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
 // Middleware
@@ -34,6 +35,7 @@ app.use('/api', company_route_1.default);
 app.use('/api/user', user_route_1.default);
 app.use('/api/applications', application_route_1.default);
 app.use('/api', report_route_1.default);
+app.use('/api/dashboard', dashboard_route_1.default);
 app.get('/', (req, res) => {
     res.send('API running');
 });
