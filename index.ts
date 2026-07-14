@@ -8,6 +8,7 @@ import jobsRoute from './routes/jobs.route';
 import CompanyRoute from './routes/company.route';
 import userRoute from './routes/user.route';
 import applicationRoute from './routes/application.route'
+import reportsRoute from './routes/report.route';
 
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/', jobsRoute);
 app.use('/api', CompanyRoute);
 app.use('/api/user', userRoute);
 app.use('/api/applications', applicationRoute);
+app.use('/api' , reportsRoute);
 
 
 app.get('/', (req: Request, res: Response) => {

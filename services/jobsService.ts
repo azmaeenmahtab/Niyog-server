@@ -376,3 +376,34 @@ export const checkJobReportedService = async (userId: string, jobId: string) => 
         throw error;
     }
 }
+
+
+
+
+export const deactivateJobService = async (jobId: string) => {
+    try {
+        console.log("[service] deactivateJobService called — jobId:", jobId);
+        const result = await collection.findOneAndUpdate(
+            { _id: new ObjectId(jobId) },
+            { $set: { status: 'inactive', updatedAt: new Date().toISOString() } },
+            { returnDocument: 'after' }
+        );
+        console.log("[service] deactivateJobService result:", result ? "updated" : "not found");
+        return result;
+    } catch (error) {
+        console.log("[service] deactivateJobService error: ", error);
+        throw error;
+    }
+}
+
+export const deleteJobService = async (jobId: string) => {
+    try {
+        console.log("[service] deleteJobService called — jobId:", jobId);
+        const result = await collection.findOneAndDelete({ _id: new ObjectId(jobId) });
+        console.log("[service] deleteJobService result:", result ? "deleted" : "not found");
+        return result;
+    } catch (error) {
+        console.log("[service] deleteJobService error: ", error);
+        throw error;
+    }
+}
