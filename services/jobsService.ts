@@ -13,6 +13,7 @@ export interface JobFilters {
   keyword?: string;
   place?: string;
   isRemote?: boolean;
+  status?: "active" | "inactive";
   page?: number;
   limit?: number;
 }
@@ -51,6 +52,10 @@ export const getAllJobsService = async (filters: JobFilters = {}) => {
       matchConditions.push({
         type: { $regex: `^${escapeRegex(filters.type)}$`, $options: "i" },
       });
+    }
+
+    if (filters.status) {
+      matchConditions.push({ status: filters.status });
     }
 
     // Strict isRemote filter (only applied when explicitly passed)
@@ -404,6 +409,49 @@ export const deleteJobService = async (jobId: string) => {
         return result;
     } catch (error) {
         console.log("[service] deleteJobService error: ", error);
+        throw error;
+    }
+}
+
+
+export interface UpdateJobPayload {
+    title?: string;
+    category?: string;
+    type?: string;
+    deadline?: string;
+    salaryMin?: string;
+    salaryMax?: string;
+    currency?: string;
+    city?: string;
+    country?: string;
+    isRemote?: boolean;
+    responsibilities?: string;
+    requirements?: string;
+    benefits?: string;
+    status?: string;
+}
+
+export const updateJobService = async (jobId: string, payload: UpdateJobPayload) => {
+    try {
+        console.log("[service] updateJobService called — jobId:", jobId, "payload:", payload);
+
+        // Strip undefined fields so we only $set what was actually provided
+        const updateFields: Record<string, any> = {};
+        Object.entries(payload).forEach(([key, value]) => {
+            if (value !== undefined) updateFields[key] = value;
+        });
+        updateFields.updatedAt = new Date().toISOString();
+
+        const result = await collection.findOneAndUpdate(
+            { _id: new ObjectId(jobId) },
+            { $set: updateFields },
+            { returnDocument: 'after' }
+        );
+
+        console.log("[service] updateJobService result:", result ? "updated" : "not found");
+        return result;
+    } catch (error) {
+        console.log("[service] updateJobService error: ", error);
         throw error;
     }
 }

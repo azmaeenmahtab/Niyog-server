@@ -12,6 +12,8 @@ const formSubmit_route_1 = __importDefault(require("./routes/formSubmit.route"))
 const jobs_route_1 = __importDefault(require("./routes/jobs.route"));
 const company_route_1 = __importDefault(require("./routes/company.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
+const application_route_1 = __importDefault(require("./routes/application.route"));
+const report_route_1 = __importDefault(require("./routes/report.route"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
 // Middleware
@@ -30,6 +32,8 @@ app.use('/', formSubmit_route_1.default);
 app.use('/', jobs_route_1.default);
 app.use('/api', company_route_1.default);
 app.use('/api/user', user_route_1.default);
+app.use('/api/applications', application_route_1.default);
+app.use('/api', report_route_1.default);
 app.get('/', (req, res) => {
     res.send('API running');
 });

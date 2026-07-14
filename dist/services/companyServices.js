@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCompanyService = void 0;
+const mongodb_1 = require("mongodb");
 const db_1 = require("../db/db");
 const RegisterCompanyServie = (payload) => {
     const db = db_1.client.db("niyog_db");
@@ -34,4 +35,18 @@ const getAllCompaniesService = async () => {
     const companies = await companyCollection.find({}).sort({ _id: -1 }).toArray();
     return companies;
 };
-module.exports = { RegisterCompanyServie, getCompanyService, getAllCompaniesService };
+const updateCompanyStatusService = async (companyId, status) => {
+    const db = db_1.client.db("niyog_db");
+    const companyCollection = db.collection("companies");
+    const result = await companyCollection.findOneAndUpdate({ _id: new mongodb_1.ObjectId(companyId) }, { $set: { status, updatedAt: new Date() } }, { returnDocument: "after" });
+    return result;
+};
+const deleteCompanyService = async (companyId) => {
+    const db = db_1.client.db("niyog_db");
+    const companyCollection = db.collection("companies");
+    const result = await companyCollection.findOneAndDelete({
+        _id: new mongodb_1.ObjectId(companyId),
+    });
+    return result;
+};
+module.exports = { RegisterCompanyServie, getCompanyService, getAllCompaniesService, updateCompanyStatusService, deleteCompanyService };

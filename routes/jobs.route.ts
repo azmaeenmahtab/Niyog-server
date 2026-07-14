@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { checkJobReportedController, checkJobSavedController, getAllJobsController, getJobByIdController, getJobsByCompanyIdController, getSavedJobsController, reportJobController, saveJobController, unsaveJobController } from '../controllers/jobsController';
+import { checkJobReportedController, checkJobSavedController, deleteJobController, getAllJobsController, getJobByIdController, getJobsByCompanyIdController, getSavedJobsController, reportJobController, saveJobController, unsaveJobController, updateJobController } from '../controllers/jobsController';
 
 const router = Router();
 
@@ -13,5 +13,7 @@ router.get('/saved-jobs/:userId', getSavedJobsController);
 router.post('/report-job/:userId', reportJobController);
 router.get('/save-job/check/:userId/:jobId', checkJobSavedController);
 router.get('/report-job/check/:userId/:jobId', checkJobReportedController);
+router.patch('/update-job/:id', /* requireRecruiter, */ updateJobController);
+router.delete('/delete-job/:id', /* requireRecruiter, */ deleteJobController);
 
 export default router;

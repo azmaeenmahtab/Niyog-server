@@ -6,4 +6,6 @@ const router = (0, express_1.Router)();
 router.post('/register-company', companyController_1.RegisterCompanyController);
 router.get('/recruiter-company', companyController_1.GetCompanyController);
 router.get('/admin/company/all', companyController_1.getAllCompanies);
+router.patch('/admin/company/update/status/:id', companyController_1.updateCompanyStatusController);
+router.delete('/admin/company/delete/:id', companyController_1.deleteCompanyController);
 exports.default = router;

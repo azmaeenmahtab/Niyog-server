@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   checkJobReportedService,
   checkJobSavedService,
+  deleteJobService,
   getAllJobsService,
   getJobByIdService,
   getJobsByCompanyIdService,
@@ -9,6 +10,7 @@ import {
   reportJobService,
   saveJobService,
   unsaveJobService,
+  updateJobService,
 } from "../services/jobsService";
 
 export const getAllJobsController = async (
@@ -24,6 +26,7 @@ export const getAllJobsController = async (
       keyword?: string;
       place?: string;
       isRemote?: boolean;
+      status?: "active" | "inactive";
       page?: number;
       limit?: number;
     } = {};
@@ -47,6 +50,9 @@ export const getAllJobsController = async (
     }
     if (typeof req.query.place === "string" && req.query.place.length) {
       filters.place = req.query.place;
+    }
+    if (req.query.status === "active" || req.query.status === "inactive") {
+      filters.status = req.query.status;
     }
 
     // Pagination params
@@ -371,4 +377,76 @@ export const checkJobReportedController = async (req: Request, res: Response): P
 }
 
 
+export const updateJobController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        console.log("[controller] PATCH /update-job/:id — params:", req.params, "body:", req.body);
+        const { id } = req.params;
+        const {
+            title, category, type, deadline, salaryMin, salaryMax,
+            currency, city, country, isRemote, responsibilities,
+            requirements, benefits, status,
+        } = req.body;
 
+        const payload: any = {};
+        if (title !== undefined) payload.title = title;
+        if (category !== undefined) payload.category = category;
+        if (type !== undefined) payload.type = type;
+        if (deadline !== undefined) payload.deadline = deadline;
+        if (salaryMin !== undefined) payload.salaryMin = salaryMin;
+        if (salaryMax !== undefined) payload.salaryMax = salaryMax;
+        if (currency !== undefined) payload.currency = currency;
+        if (city !== undefined) payload.city = city;
+        if (country !== undefined) payload.country = country;
+        if (isRemote !== undefined) payload.isRemote = isRemote;
+        if (responsibilities !== undefined) payload.responsibilities = responsibilities;
+        if (requirements !== undefined) payload.requirements = requirements;
+        if (benefits !== undefined) payload.benefits = benefits;
+        if (status !== undefined) {
+            if (!['active', 'inactive'].includes(status)) {
+                return res.status(400).json({ success: false, message: "status must be 'active' or 'inactive'." });
+            }
+            payload.status = status;
+        }
+
+        if (Object.keys(payload).length === 0) {
+            return res.status(400).json({ success: false, message: "No fields provided to update." });
+        }
+
+        const updatedJob = await updateJobService(id as string, payload);
+
+        if (!updatedJob) {
+            return res.status(404).json({ success: false, message: "Job not found." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Job updated successfully",
+            data: updatedJob,
+        });
+    } catch (error: any) {
+        console.log("[controller] updateJobController error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+}
+
+export const deleteJobController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        console.log("[controller] DELETE /delete-job/:id — params:", req.params);
+        const { id } = req.params;
+
+        const deletedJob = await deleteJobService(id as string);
+
+        if (!deletedJob) {
+            return res.status(404).json({ success: false, message: "Job not found." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Job deleted successfully",
+            data: deletedJob,
+        });
+    } catch (error: any) {
+        console.log("[controller] deleteJobController error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+}
