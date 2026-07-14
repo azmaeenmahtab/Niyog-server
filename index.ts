@@ -9,6 +9,7 @@ import CompanyRoute from './routes/company.route';
 import userRoute from './routes/user.route';
 import applicationRoute from './routes/application.route'
 import reportsRoute from './routes/report.route';
+import dashboardRoute from './routes/dashboard.route';
 
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api', CompanyRoute);
 app.use('/api/user', userRoute);
 app.use('/api/applications', applicationRoute);
 app.use('/api' , reportsRoute);
+app.use('/api/dashboard', dashboardRoute);
 
 
 app.get('/', (req: Request, res: Response) => {
