@@ -20,3 +20,33 @@ export const userService = {
     return result;
   }
 };
+
+
+export const getUserProfileService = async (userId: string) => {
+  try {
+    console.log("[service] getUserProfileService called — userId:", userId);
+    const usersCollection = db.collection('user');
+
+    // Convert string ID to MongoDB ObjectId safely
+    let queryId: ObjectId;
+    try {
+      queryId = new ObjectId(userId);
+    } catch (err) {
+      console.log("[service] Invalid ObjectId format:", userId);
+      return null;
+    }
+
+    const user = await usersCollection.findOne({ _id: queryId });
+
+    if (!user) {
+      console.log("[service] User not found for ID:", userId);
+      return null;
+    }
+
+    console.log("[service] getUserProfileService found user:", user.email);
+    return user;
+  } catch (error) {
+    console.error("[service] getUserProfileService error:", error);
+    throw error;
+  }
+};
